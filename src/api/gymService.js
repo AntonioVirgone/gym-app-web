@@ -1,9 +1,9 @@
 // ============================================================================
 // --- API SERVICE (PREDISPOSIZIONE BACKEND NESTJS) ---
 // ============================================================================
-import {MOCK_CLIENTS, MOCK_EXERCISES, MOCK_GYMS, MOCK_TEMPLATES} from "../modules/mockData.js";
+import {MOCK_CLIENTS} from "../modules/mockData.js";
 
-export const USE_MOCK_API = true;
+export const USE_MOCK_API = false;
 export const API_BASE_URL = 'http://localhost:3000/api';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -11,7 +11,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 export const api = {
     // --- ATLETI ---
     getClients: async () => {
-        if (USE_MOCK_API) {
+        if (!USE_MOCK_API) {
             const res = await fetch(`${API_BASE_URL}/clients`);
             if (!res.ok) throw new Error('Errore server');
             return res.json();
@@ -21,7 +21,7 @@ export const api = {
     },
 
     addClient: async (clientData) => {
-        if (USE_MOCK_API) {
+        if (!USE_MOCK_API) {
             const res = await fetch(`${API_BASE_URL}/clients`, { method: 'POST', body: JSON.stringify(clientData), headers: {'Content-Type': 'application/json'} });
             return res.json();
         }
@@ -33,7 +33,7 @@ export const api = {
     },
 
     updateClient: async (clientData) => {
-        if (USE_MOCK_API) {
+        if (!USE_MOCK_API) {
             const res = await fetch(`${API_BASE_URL}/clients/${clientData.id}`, { method: 'PUT', body: JSON.stringify(clientData), headers: {'Content-Type': 'application/json'} });
             return res.json();
         }
@@ -45,7 +45,7 @@ export const api = {
     },
 
     deleteClient: async (id) => {
-        if (USE_MOCK_API) {
+        if (!USE_MOCK_API) {
             await fetch(`${API_BASE_URL}/clients/${id}`, { method: 'DELETE' });
             return id;
         }
