@@ -15,12 +15,11 @@ import LoginScreen from "./modules/auth/LoginScreen.jsx";
 export default function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [view, setView] = useState('list'); // 'list', 'detail', 'create-workout', 'exercises', 'gyms', 'templates', 'create-template', 'notifications'
+    const [view, setView] = useState('list');
     const [selectedClient, setSelectedClient] = useState(null);
 
     const [editingWorkout, setEditingWorkout] = useState(null);
     const [startingTemplate, setStartingTemplate] = useState(null);
-
     const [toastMessage, setToastMessage] = useState('');
 
     const [clients, setClients] = useState([]);
@@ -61,9 +60,7 @@ export default function App() {
         setClients([]);
     };
 
-    // Navigazione Menu
     const handleSelectClient = async (client) => {
-        // Controllo se ci sono messaggi da "smarcare" come letti
         const hasUnread = client.messages?.some(m => m.sender === 'client' && !m.read);
 
         if (hasUnread) {
@@ -74,8 +71,7 @@ export default function App() {
             setSelectedClient(updatedClient);
             setView('detail');
 
-            // Sincronizzazione in background
-            try { await api.updateClient(updatedClient); }
+            try { await api.updateClient(updatedClient.id, updatedClient); }
             catch (e) { console.error("Errore sinc. messaggi letti", e); }
         } else {
             setSelectedClient(client);
@@ -89,29 +85,27 @@ export default function App() {
     const handleNavToTemplates = () => { setSelectedClient(null); setView('templates'); };
     const handleNavToNotifications = () => { setSelectedClient(null); setView('notifications'); };
 
-    // Calcolo dinamico notifiche (messaggi non letti dei clienti)
     const unreadNotifications = clients.flatMap(client =>
         (client.messages || [])
             .filter(msg => msg.sender === 'client' && !msg.read)
             .map(msg => ({ ...msg, client }))
     );
 
-    // --- ATLETI ---
     const handleAddClient = async (newClientData) => {
         try {
             const createdClient = await api.addClient(newClientData);
             setClients([createdClient, ...clients]);
-            setToastMessage('Atleta (e utenza) creati con successo sul server!');
+            setToastMessage('Atleta (e utenza) creati!');
             setTimeout(() => setToastMessage(''), 4000);
         } catch (e) { setToastMessage('Errore salvataggio server!'); }
     };
 
     const handleUpdateClient = async (updatedClientData) => {
         try {
-            const updatedClient = await api.updateClient(updatedClientData);
+            const updatedClient = await api.updateClient(updatedClientData.id, updatedClientData);
             setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c));
             if (selectedClient?.id === updatedClient.id) setSelectedClient(updatedClient);
-            setToastMessage('Profilo aggiornato sul server!');
+            setToastMessage('Profilo aggiornato!');
             setTimeout(() => setToastMessage(''), 3000);
         } catch (e) { setToastMessage('Errore salvataggio server!'); }
     };
@@ -121,7 +115,7 @@ export default function App() {
             await api.deleteClient(clientId);
             setClients(clients.filter(c => c.id !== clientId));
             if (selectedClient?.id === clientId) handleBackToList();
-            setToastMessage('Atleta eliminato dal server!');
+            setToastMessage('Atleta eliminato!');
             setTimeout(() => setToastMessage(''), 3000);
         } catch (e) { setToastMessage('Errore eliminazione server!'); }
     };
@@ -133,7 +127,6 @@ export default function App() {
         await handleUpdateClient(toggledData);
     };
 
-    // --- MESSAGGI ---
     const handleSendMessage = async (clientId, text) => {
         const targetClient = clients.find(c => c.id === clientId);
         if (!targetClient) return;
@@ -142,11 +135,11 @@ export default function App() {
         const timestamp = now.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ', ' + now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 
         const newMessage = {
-            id: Date.now().toString(),
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
             sender: 'trainer',
             text: text,
             timestamp: timestamp,
-            read: true // i messaggi del trainer sono letti di default per il lato trainer
+            read: true
         };
 
         const updatedClientData = {
@@ -155,7 +148,7 @@ export default function App() {
         };
 
         try {
-            const savedClient = await api.updateClient(updatedClientData);
+            const savedClient = await api.updateClient(updatedClientData.id, updatedClientData);
             setClients(clients.map(c => c.id === savedClient.id ? savedClient : c));
             if (selectedClient?.id === savedClient.id) setSelectedClient(savedClient);
         } catch (e) {
@@ -163,7 +156,6 @@ export default function App() {
         }
     };
 
-    // --- SCHEDE CLIENTE ---
     const handleCreateWorkoutClick = (clientId) => {
         setEditingWorkout(null);
         setStartingTemplate(null);
@@ -196,7 +188,7 @@ export default function App() {
         } else {
             const newWorkoutHistory = {
                 ...workoutData,
-                id: Date.now().toString(),
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                 date: new Date().toLocaleDateString('it-IT')
             };
             newHistory = [newWorkoutHistory, ...(selectedClient.history || [])];
@@ -210,7 +202,7 @@ export default function App() {
         };
 
         try {
-            const savedClient = await api.updateClient(updatedClientData);
+            const savedClient = await api.updateClient(updatedClientData.id, updatedClientData);
             setClients(clients.map(c => c.id === savedClient.id ? savedClient : c));
             setSelectedClient(savedClient);
             setToastMessage(alertMessage);
@@ -230,7 +222,7 @@ export default function App() {
         };
 
         try {
-            const savedClient = await api.updateClient(updatedClientData);
+            const savedClient = await api.updateClient(updatedClientData.id, updatedClientData);
             setClients(clients.map(c => c.id === savedClient.id ? savedClient : c));
             setSelectedClient(savedClient);
             setToastMessage('Scheda eliminata dal server!');
@@ -238,7 +230,6 @@ export default function App() {
         } catch(e) { setToastMessage('Errore eliminazione scheda!'); }
     };
 
-    // --- MODELLI GLOBALI (TEMPLATES) ---
     const handleCreateTemplateClick = () => {
         setEditingWorkout(null);
         setView('create-template');
@@ -251,7 +242,7 @@ export default function App() {
 
     const handleAddTemplate = async (templateData) => {
         try {
-            const created = await api.addTemplate({ ...templateData, id: Date.now().toString() });
+            const created = await api.addTemplate(templateData);
             setTemplatesList([created, ...templatesList]);
             setToastMessage('Modello base salvato!');
             setTimeout(() => setToastMessage(''), 3000);
@@ -261,7 +252,7 @@ export default function App() {
 
     const handleUpdateTemplate = async (templateData) => {
         try {
-            const updated = await api.updateTemplate(templateData);
+            const updated = await api.updateTemplate(templateData.id, templateData);
             setTemplatesList(templatesList.map(t => t.id === updated.id ? updated : t));
             setToastMessage('Modello base aggiornato!');
             setTimeout(() => setToastMessage(''), 3000);
@@ -270,6 +261,7 @@ export default function App() {
     };
 
     const handleDeleteTemplate = async (id) => {
+        if(!id) return;
         try {
             await api.deleteTemplate(id);
             setTemplatesList(templatesList.filter(t => t.id !== id));
@@ -278,26 +270,26 @@ export default function App() {
         } catch (e) { setToastMessage('Errore API!'); }
     };
 
-    // --- PALESTRE E ESERCIZI ---
     const handleAddGym = async (newGym) => {
         try {
-            const created = await api.addGym({ ...newGym, id: Date.now().toString() });
+            const created = await api.addGym(newGym);
             setGymsList([...gymsList, created]);
             setToastMessage('Palestra sincronizzata!');
             setTimeout(() => setToastMessage(''), 3000);
         } catch (e) { setToastMessage('Errore API!'); }
     };
 
-    const handleUpdateGym = async (id, updatedGym) => {
+    const handleUpdateGym = async (updatedGym) => {
         try {
-            const updated = await api.updateGym(updatedGym);
-            setGymsList(gymsList.map(g => g.id === id ? updated : g));
+            const updated = await api.updateGym(updatedGym.id, updatedGym);
+            setGymsList(gymsList.map(g => g.id === updatedGym.id ? updated : g));
             setToastMessage('Palestra aggiornata!');
             setTimeout(() => setToastMessage(''), 3000);
         } catch (e) { setToastMessage('Errore API!'); }
     };
 
     const handleDeleteGym = async (id) => {
+        if(!id) return;
         try {
             await api.deleteGym(id);
             setGymsList(gymsList.filter(g => g.id !== id));
@@ -310,23 +302,24 @@ export default function App() {
 
     const handleAddExercise = async (newExercise) => {
         try {
-            const created = await api.addExercise({ ...newExercise, id: Date.now().toString() });
+            const created = await api.addExercise(newExercise);
             setExercisesList([...exercisesList, created]);
             setToastMessage('Esercizio sincronizzato!');
             setTimeout(() => setToastMessage(''), 3000);
         } catch (e) { setToastMessage('Errore API!'); }
     };
 
-    const handleUpdateExercise = async (id, updatedExercise) => {
+    const handleUpdateExercise = async (updatedExercise) => {
         try {
-            const updated = await api.updateExercise(updatedExercise);
-            setExercisesList(exercisesList.map(ex => ex.id === id ? updated : ex));
+            const updated = await api.updateExercise(updatedExercise.id, updatedExercise);
+            setExercisesList(exercisesList.map(ex => ex.id === updatedExercise.id ? updated : ex));
             setToastMessage('Esercizio aggiornato!');
             setTimeout(() => setToastMessage(''), 3000);
         } catch (e) { setToastMessage('Errore API!'); }
     };
 
     const handleDeleteExercise = async (id) => {
+        if(!id) return;
         try {
             await api.deleteExercise(id);
             setExercisesList(exercisesList.filter(ex => ex.id !== id));
@@ -335,7 +328,6 @@ export default function App() {
         } catch (e) { setToastMessage('Errore API!'); }
     };
 
-    // --- RENDER MAIN LAYOUT ---
     if (!isAuthenticated) return <LoginScreen onLogin={handleLogin} />;
 
     return (
@@ -387,8 +379,8 @@ export default function App() {
                             </div>
                             {unreadNotifications.length > 0 && (
                                 <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  {unreadNotifications.length}
-                </span>
+                                  {unreadNotifications.length}
+                                </span>
                             )}
                         </button>
                     </div>
@@ -413,9 +405,9 @@ export default function App() {
                             <Bell className="text-slate-500 w-6 h-6" />
                             {unreadNotifications.length > 0 && (
                                 <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-white"></span>
-                </span>
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-white"></span>
+                                </span>
                             )}
                         </button>
                         <button onClick={handleLogout}>
@@ -456,7 +448,6 @@ export default function App() {
                             />
                         )}
 
-                        {/* Sezione Notifiche */}
                         {view === 'notifications' && (
                             <NotificationsView
                                 notifications={unreadNotifications}
@@ -464,7 +455,6 @@ export default function App() {
                             />
                         )}
 
-                        {/* Workout Builder (Scheda Cliente) */}
                         {view === 'create-workout' && selectedClient && (
                             <WorkoutBuilder
                                 isTemplate={false}
@@ -476,7 +466,6 @@ export default function App() {
                             />
                         )}
 
-                        {/* Elenco Modelli Globali */}
                         {view === 'templates' && (
                             <TemplatesManager
                                 templates={templatesList}
@@ -486,7 +475,6 @@ export default function App() {
                             />
                         )}
 
-                        {/* Workout Builder (Modello Globale) */}
                         {view === 'create-template' && (
                             <WorkoutBuilder
                                 isTemplate={true}

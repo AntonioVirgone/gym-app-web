@@ -1,17 +1,18 @@
 import {MOCK_EXERCISES, MOCK_TEMPLATES} from "../modules/mockData.js";
 
-export const USE_MOCK_API = false;
-export const API_BASE_URL = 'http://localhost:3000/api';
+// ============================================================================
+// --- API SERVICE ---
+// ============================================================================
+const USE_MOCK_API = false; // Imposta a true se il backend è spento
+const API_BASE_URL = 'http://localhost:3000/api';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Helper per recuperare il trainerId
 const getTrainerId = () => {
     const user = JSON.parse(localStorage.getItem('currentUser'));
     return user?.id || '';
 };
 
-// Helper per generare gli headers in automatico per TUTTE le chiamate
 const getHeaders = () => ({
     'Content-Type': 'application/json',
     'trainer-id': getTrainerId()

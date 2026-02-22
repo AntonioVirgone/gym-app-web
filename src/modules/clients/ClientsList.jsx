@@ -1,13 +1,13 @@
 // src/modules/clients/ClientsList.jsx
 import React, { useState } from 'react';
-import { Search, Plus, User, Edit, UserX, UserCheck, Trash2, Building } from 'lucide-react';
+import {Search, Plus, User, Edit, UserX, UserCheck, Trash2, Building, Key} from 'lucide-react';
 
 // 2. Componente Lista Clienti
 export default function ClientsList({ clients, gyms, onSelectClient, onAddClient, onUpdateClient, onDeleteClient, onToggleStatus }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedGymFilter, setSelectedGymFilter] = useState('all');
     const [clientModal, setClientModal] = useState({ isOpen: false, mode: 'add', client: null });
-    const [formData, setFormData] = useState({ name: '', email: '', goal: '', gymId: gyms.length > 0 ? gyms[0].id : '' });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', goal: '', gymId: gyms.length > 0 ? gyms[0].id : '' });
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const [errorMsg, setErrorMsg] = useState('');
 
@@ -18,14 +18,14 @@ export default function ClientsList({ clients, gyms, onSelectClient, onAddClient
     });
 
     const openAddModal = () => {
-        setFormData({ name: '', email: '', goal: '', gymId: gyms.length > 0 ? gyms[0].id : '' });
+        setFormData({ name: '', email: '', password: '', goal: '', gymId: gyms.length > 0 ? gyms[0].id : '' });
         setClientModal({ isOpen: true, mode: 'add', client: null });
         setErrorMsg('');
     };
 
     const openEditModal = (client, e) => {
         e.stopPropagation();
-        setFormData({ name: client.name, email: client.email, goal: client.goal, gymId: client.gymId || '' });
+        setFormData({ name: client.name, email: client.email, password: '', goal: client.goal, gymId: client.gymId || '' });
         setClientModal({ isOpen: true, mode: 'edit', client });
         setErrorMsg('');
     };
@@ -38,10 +38,15 @@ export default function ClientsList({ clients, gyms, onSelectClient, onAddClient
         }
 
         if (clientModal.mode === 'add') {
+            if (!formData.email.trim()) {
+                setErrorMsg("L'email è obbligatoria per creare l'account del cliente");
+                return;
+            }
             onAddClient({
                 id: Date.now().toString(),
                 name: formData.name.trim(),
                 email: formData.email.trim(),
+                password: formData.password.trim() || 'password',
                 goal: formData.goal.trim() || 'Generico',
                 gymId: formData.gymId,
                 activePlan: null,
@@ -50,20 +55,23 @@ export default function ClientsList({ clients, gyms, onSelectClient, onAddClient
                 isActive: true
             });
         } else {
-            onUpdateClient({
+            const updateData = {
                 ...clientModal.client,
                 name: formData.name.trim(),
                 email: formData.email.trim(),
                 goal: formData.goal.trim() || 'Generico',
                 gymId: formData.gymId
-            });
+            };
+            if (formData.password.trim() !== '') {
+                updateData.password = formData.password.trim();
+            }
+            onUpdateClient(updateData);
         }
         setClientModal({ isOpen: false, mode: 'add', client: null });
     };
 
     return (
         <div className="space-y-6">
-            {/* HEADER LISTA CLIENTI RESPONSIVE */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 shrink-0">I tuoi Atleti</h2>
                 <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full lg:w-auto flex-1 lg:justify-end">
@@ -114,9 +122,9 @@ export default function ClientsList({ clients, gyms, onSelectClient, onAddClient
                                     </div>
                                     {hasUnread && (
                                         <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-white"></span>
-                  </span>
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-white"></span>
+                                        </span>
                                     )}
                                 </div>
                                 <div className="flex gap-1" onClick={e => e.stopPropagation()}>
@@ -142,12 +150,12 @@ export default function ClientsList({ clients, gyms, onSelectClient, onAddClient
                                 </div>
                             )}
                             <div className="flex items-center justify-between text-sm mt-auto">
-              <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded truncate max-w-[120px]" title={client.goal}>
-                Obiettivo: {client.goal}
-              </span>
+                                <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded truncate max-w-[120px]" title={client.goal}>
+                                    Obiettivo: {client.goal}
+                                </span>
                                 <span className={`px-2 py-1 rounded whitespace-nowrap ${client.activePlan ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                {client.activePlan ? 'Attivo' : 'Nessuna Scheda'}
-              </span>
+                                    {client.activePlan ? 'Attivo' : 'Nessuna Scheda'}
+                                </span>
                             </div>
                         </div>
                     )})}
@@ -164,6 +172,12 @@ export default function ClientsList({ clients, gyms, onSelectClient, onAddClient
                         <h3 className="text-xl font-bold text-slate-800 mb-4">
                             {clientModal.mode === 'add' ? 'Aggiungi Nuovo Atleta' : 'Modifica Atleta'}
                         </h3>
+                        {clientModal.mode === 'add' && (
+                            <div className="mb-4 p-3 bg-blue-50 text-blue-800 rounded-lg text-sm flex gap-2 items-start border border-blue-100">
+                                <Key className="w-5 h-5 shrink-0 text-blue-500" />
+                                <p>La creazione genererà un <b>Account Cliente</b> per l'accesso alla GymApp Atleti. Compila email e password.</p>
+                            </div>
+                        )}
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {errorMsg && <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">{errorMsg}</div>}
                             <div>
@@ -176,15 +190,27 @@ export default function ClientsList({ clients, gyms, onSelectClient, onAddClient
                                     placeholder="Es. Mario Rossi"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                                <input
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="mario.rossi@email.com"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Email Acc. *</label>
+                                    <input
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                        className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        placeholder="mario.rossi@email.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Password {clientModal.mode === 'edit' && '(Opz)'}</label>
+                                    <input
+                                        type="text"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                        className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        placeholder={clientModal.mode === 'add' ? "Es. password123" : "Nuova password..."}
+                                    />
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Palestra di Riferimento</label>

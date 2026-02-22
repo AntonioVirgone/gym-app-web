@@ -1,12 +1,13 @@
 import {Dumbbell} from 'lucide-react';
-import {useState} from "react";
+import React, {useState} from "react";
 import {api} from "../../api/gymService.js";
+
 // 1. Componente Login & Registrazione
 export default function LoginScreen({onLogin}) {
     const [isRegistering, setIsRegistering] = useState(false);
     const [name, setName] = useState('');
-    const [email, setEmail] = useState('trainer@gym.com');
-    const [password, setPassword] = useState('password');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
@@ -35,7 +36,7 @@ export default function LoginScreen({onLogin}) {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 transition-all">
                 <div className="text-center mb-8">
                     <div className="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Dumbbell className="text-white w-8 h-8"/>
+                        <Dumbbell className="text-white w-8 h-8" />
                     </div>
                     <h1 className="text-2xl font-bold text-slate-800">
                         {isRegistering ? 'Nuovo Trainer' : 'Trainer Portal'}

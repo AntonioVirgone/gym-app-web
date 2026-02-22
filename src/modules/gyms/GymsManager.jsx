@@ -1,7 +1,7 @@
 // 4.5 Componente Gestione Palestre
-import {useState} from "react";
+import React, {useState} from "react";
 
-import {Building, Edit, Trash2} from 'lucide-react';
+import {Building, ClipboardList, Edit, Plus, Trash2} from 'lucide-react';
 
 export default function GymsManager ({ gyms, onAdd, onUpdate, onDelete }) {
     const [formData, setFormData] = useState({ name: '' });
@@ -25,16 +25,16 @@ export default function GymsManager ({ gyms, onAdd, onUpdate, onDelete }) {
 
         setErrorMsg('');
         if (editId !== null) {
-            onUpdate(editId, { ...formData, name: valName });
+            onUpdate({ ...formData, id: editId, name: valName });
             setEditId(null);
         } else {
-            onAdd({ id: Date.now().toString(), name: valName });
+            onAdd({ name: valName });
         }
         setFormData({ name: '' });
     };
 
     const handleEdit = (gym) => {
-        setFormData({ name: gym.name });
+        setFormData({ name: gym.name || '' });
         setEditId(gym.id);
         setErrorMsg('');
     };
@@ -48,7 +48,7 @@ export default function GymsManager ({ gyms, onAdd, onUpdate, onDelete }) {
                     <div className="flex-1 w-full min-w-[200px]">
                         <input
                             type="text"
-                            value={formData.name}
+                            value={formData.name || ''}
                             onChange={(e) => setFormData({name: e.target.value})}
                             placeholder="Nome Palestra (es. FitActive Milano)"
                             className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
@@ -76,34 +76,21 @@ export default function GymsManager ({ gyms, onAdd, onUpdate, onDelete }) {
 
                 <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
                     {gyms.map((gym) => (
-                        <div key={gym.id} className="flex justify-between items-center p-4 bg-slate-50 border border-slate-100 rounded-lg hover:border-slate-200 transition-colors">
-              <span className="font-bold text-slate-800 flex items-center gap-2">
-                <Building className="w-5 h-5 text-slate-400" />
-                  {gym.name}
+                        <div key={gym.id || Math.random().toString()} className="flex justify-between items-center p-4 bg-slate-50 border border-slate-100 rounded-lg hover:border-slate-200 transition-colors">
+              <span className="font-bold text-slate-800 flex items-center gap-2 truncate pr-4">
+                <Building className="w-5 h-5 text-slate-400 shrink-0" />
+                <span className="truncate">{gym.name}</span>
               </span>
                             <div className="flex gap-2 shrink-0">
-                                <button
-                                    onClick={() => handleEdit(gym)}
-                                    className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                                    title="Modifica"
-                                >
+                                <button onClick={() => handleEdit(gym)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors">
                                     <Edit className="w-5 h-5" />
                                 </button>
-                                <button
-                                    onClick={() => setConfirmDeleteId(gym.id)}
-                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Elimina"
-                                >
+                                <button onClick={() => setConfirmDeleteId(gym.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                                     <Trash2 className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
                     ))}
-                    {gyms.length === 0 && (
-                        <div className="text-center py-8 text-slate-400">
-                            Nessuna palestra configurata sul server.
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -111,23 +98,14 @@ export default function GymsManager ({ gyms, onAdd, onUpdate, onDelete }) {
                 <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
                         <h3 className="text-xl font-bold text-slate-800 mb-2">Elimina Palestra</h3>
-                        <p className="text-slate-600 mb-6">
-                            Sei sicuro di voler eliminare questa palestra dal server? Gli atleti associati non verranno eliminati, ma perderanno il riferimento.
-                        </p>
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => setConfirmDeleteId(null)}
-                                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                            >
+                        <div className="flex justify-end gap-3 mt-4">
+                            <button onClick={() => setConfirmDeleteId(null)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
                                 Annulla
                             </button>
                             <button
                                 onClick={() => {
                                     onDelete(confirmDeleteId);
-                                    if (editId === confirmDeleteId) {
-                                        setEditId(null);
-                                        setFormData({ name: '' });
-                                    }
+                                    if (editId === confirmDeleteId) { setEditId(null); setFormData({ name: '' }); }
                                     setConfirmDeleteId(null);
                                 }}
                                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"

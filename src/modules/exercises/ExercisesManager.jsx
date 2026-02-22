@@ -1,5 +1,5 @@
 // 4. Componente Gestione Esercizi
-import {useState} from "react";
+import React, {useState} from "react";
 
 import {Edit, Trash2} from 'lucide-react';
 
@@ -25,7 +25,7 @@ export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete
 
         setErrorMsg('');
         if (editId !== null) {
-            onUpdate(editId, { ...formData, name: valName });
+            onUpdate({ ...formData, id: editId, name: valName });
             setEditId(null);
         } else {
             onAdd({ ...formData, name: valName });
@@ -34,7 +34,11 @@ export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete
     };
 
     const handleEdit = (exercise) => {
-        setFormData({ name: exercise.name, description: exercise.description || '', defaultRest: exercise.defaultRest || 60 });
+        setFormData({
+            name: exercise.name || '',
+            description: exercise.description || '',
+            defaultRest: exercise.defaultRest || 60
+        });
         setEditId(exercise.id);
         setErrorMsg('');
     };
@@ -99,39 +103,32 @@ export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete
 
                 <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
                     {exercises.map((ex) => (
-                        <div key={ex.id} className="flex justify-between items-start p-4 bg-slate-50 border border-slate-100 rounded-lg hover:border-slate-200 transition-colors">
-                            <div>
-                                <h4 className="font-bold text-slate-800 flex items-center gap-2">
-                                    {ex.name}
-                                    <span className="text-xs font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <div key={ex.id || Math.random().toString()} className="flex justify-between items-start p-4 bg-slate-50 border border-slate-100 rounded-lg hover:border-slate-200 transition-colors">
+                            <div className="min-w-0 pr-4">
+                                <h4 className="font-bold text-slate-800 flex items-center gap-2 flex-wrap">
+                                    <span className="truncate">{ex.name}</span>
+                                    <span className="text-xs font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
                     {ex.defaultRest}s rec.
                   </span>
                                 </h4>
-                                {ex.description && <p className="text-sm text-slate-500 mt-1">{ex.description}</p>}
+                                {ex.description && <p className="text-sm text-slate-500 mt-1 truncate">{ex.description}</p>}
                             </div>
-                            <div className="flex gap-2 ml-4 shrink-0">
+                            <div className="flex gap-2 shrink-0">
                                 <button
                                     onClick={() => handleEdit(ex)}
                                     className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                                    title="Modifica"
                                 >
                                     <Edit className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={() => setConfirmDeleteId(ex.id)}
                                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Elimina"
                                 >
                                     <Trash2 className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
                     ))}
-                    {exercises.length === 0 && (
-                        <div className="text-center py-8 text-slate-400">
-                            Nessun esercizio presente sul server. Aggiungine uno!
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -140,7 +137,7 @@ export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete
                     <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
                         <h3 className="text-xl font-bold text-slate-800 mb-2">Elimina Esercizio</h3>
                         <p className="text-slate-600 mb-6">
-                            Sei sicuro di voler eliminare l'esercizio "{exercises.find(e => e.id === confirmDeleteId)?.name}" dal server? L'azione non è reversibile.
+                            Sei sicuro di voler eliminare l'esercizio? L'azione non è reversibile.
                         </p>
                         <div className="flex justify-end gap-3">
                             <button

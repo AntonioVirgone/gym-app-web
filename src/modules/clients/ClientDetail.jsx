@@ -1,5 +1,5 @@
 // 3. Componente Dettaglio Cliente
-import {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 
 import {Calendar, ClipboardList, Edit, MessageSquare, Plus, Send, Trash2} from 'lucide-react';
 
@@ -62,7 +62,6 @@ export default function ClientDetail ({ client, templates, onBack, onCreateWorko
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Storico Schede */}
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100">
                     <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-slate-500" /> Storico Schede Cliente
@@ -83,14 +82,12 @@ export default function ClientDetail ({ client, templates, onBack, onCreateWorko
                                         <button
                                             onClick={() => onEditWorkout(workout)}
                                             className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                                            title="Modifica scheda"
                                         >
                                             <Edit className="w-5 h-5" />
                                         </button>
                                         <button
                                             onClick={() => setConfirmDeleteId(workout.id || index)}
                                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                            title="Elimina scheda"
                                         >
                                             <Trash2 className="w-5 h-5" />
                                         </button>
@@ -105,7 +102,6 @@ export default function ClientDetail ({ client, templates, onBack, onCreateWorko
                     )}
                 </div>
 
-                {/* Area Messaggi / Note */}
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-100 flex flex-col h-[500px]">
                     <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 shrink-0">
                         <MessageSquare className="w-5 h-5 text-blue-500" /> Area Messaggi
@@ -138,7 +134,7 @@ export default function ClientDetail ({ client, templates, onBack, onCreateWorko
                             onChange={(e) => setNewMessageText(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                             placeholder="Scrivi una risposta..."
-                            className="flex-1 p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                            className="flex-1 p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm min-w-0"
                         />
                         <button
                             onClick={handleSend}
@@ -151,7 +147,6 @@ export default function ClientDetail ({ client, templates, onBack, onCreateWorko
                 </div>
             </div>
 
-            {/* Modal di Selezione Tipo Scheda (Modello vs Nuova) */}
             {showAssignModal && (
                 <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl p-6 max-w-lg w-full shadow-2xl">
@@ -203,7 +198,6 @@ export default function ClientDetail ({ client, templates, onBack, onCreateWorko
                 </div>
             )}
 
-            {/* Modal Conferma Eliminazione Scheda */}
             {confirmDeleteId !== null && (
                 <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
