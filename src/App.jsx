@@ -52,12 +52,8 @@ export default function App() {
             setIsLoading(false);
         }
     };
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        const response = await api.login(email, password);
-        localStorage.setItem('gymUser', JSON.stringify(response.user));
-        setIsAuthenticated(true);
-    }
+
+    const handleLogin = () => setIsAuthenticated(true);
     const handleLogout = () => {
         setIsAuthenticated(false);
         setView('list');
@@ -105,8 +101,8 @@ export default function App() {
         try {
             const createdClient = await api.addClient(newClientData);
             setClients([createdClient, ...clients]);
-            setToastMessage('Atleta salvato sul server!');
-            setTimeout(() => setToastMessage(''), 3000);
+            setToastMessage('Atleta (e utenza) creati con successo sul server!');
+            setTimeout(() => setToastMessage(''), 4000);
         } catch (e) { setToastMessage('Errore salvataggio server!'); }
     };
 
@@ -343,8 +339,8 @@ export default function App() {
     if (!isAuthenticated) return <LoginScreen onLogin={handleLogin} />;
 
     return (
-        <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
-            <aside className="w-64 bg-slate-900 text-white flex-col hidden md:flex">
+        <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900 overflow-x-hidden">
+            <aside className="w-64 bg-slate-900 text-white flex-col hidden md:flex shrink-0">
                 <div className="p-6 border-b border-slate-800 flex items-center gap-3">
                     <Dumbbell className="text-blue-500 w-8 h-8" />
                     <span className="font-bold text-xl">GymApp</span>
@@ -406,8 +402,8 @@ export default function App() {
                 </div>
             </aside>
 
-            <main className="flex-1 h-screen overflow-y-auto flex flex-col relative">
-                <header className="md:hidden bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-10 shrink-0">
+            <main className="flex-1 h-screen overflow-y-auto overflow-x-hidden flex flex-col relative w-full">
+                <header className="md:hidden bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-10 shrink-0 w-full">
                     <div className="flex items-center gap-2">
                         <Dumbbell className="text-blue-600 w-6 h-6" />
                         <span className="font-bold text-lg">GymApp</span>
@@ -434,7 +430,7 @@ export default function App() {
                         <p className="font-medium text-lg">Sincronizzazione dati con il server...</p>
                     </div>
                 ) : (
-                    <div className="p-4 md:p-8 max-w-5xl mx-auto w-full overflow-x-hidden">
+                    <div className="p-4 md:p-8 max-w-5xl mx-auto w-full">
                         {view === 'list' && (
                             <ClientsList
                                 clients={clients}
