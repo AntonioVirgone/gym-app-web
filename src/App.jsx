@@ -52,8 +52,12 @@ export default function App() {
             setIsLoading(false);
         }
     };
-
-    const handleLogin = () => setIsAuthenticated(true);
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        const response = await api.login(email, password);
+        localStorage.setItem('gymUser', JSON.stringify(response.user));
+        setIsAuthenticated(true);
+    }
     const handleLogout = () => {
         setIsAuthenticated(false);
         setView('list');
