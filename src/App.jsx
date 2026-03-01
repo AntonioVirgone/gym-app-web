@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {Bell, Building, ClipboardList, Dumbbell, List, Loader2, LogOut, Users} from 'lucide-react';
-import {api} from "./api/gymService.js";
 import ClientsList from "./modules/clients/ClientsList.jsx";
 import WorkoutBuilder from "./modules/workouts/WorkoutBuilder.jsx";
 import ClientDetail from "./modules/clients/ClientDetail.jsx";
@@ -10,6 +9,9 @@ import TemplatesManager from "./modules/templates/TemplatesManager.jsx";
 import NotificationsView from "./modules/notifications/NotificationsView.jsx";
 import LoginScreen from "./modules/auth/LoginScreen.jsx";
 import {clientApi} from "./api/ClientService.js";
+import {exercisesApi} from "./api/ExercisesService.js";
+import {templatesApi} from "./api/TemplatesService.js";
+import {gymApi} from "./api/GymService.js";
 
 // --- MAIN APP COMPONENT ---
 
@@ -45,9 +47,9 @@ export default function App() {
         try {
             const [fetchedClients, fetchedGyms, fetchedExercises, fetchedTemplates] = await Promise.all([
                 clientApi.getClients(),
-                api.getGyms(),
-                api.getExercises(),
-                api.getTemplates()
+                gymApi.getGyms(),
+                exercisesApi.getExercises(),
+                templatesApi.getTemplates()
             ]);
             setClients(fetchedClients);
             setGymsList(fetchedGyms);
@@ -82,7 +84,7 @@ export default function App() {
             setSelectedClient(updatedClient);
             setView('detail');
 
-            try { await api.updateClient(updatedClient.id, updatedClient); }
+            try { await clientApi.updateClient(updatedClient.id, updatedClient); }
             catch (e) { console.error("Errore sinc. messaggi letti", e); }
         } else {
             setSelectedClient(client);
@@ -138,6 +140,7 @@ export default function App() {
         await handleUpdateClient(toggledData);
     };
 
+    // SEND MESSAGE
     const handleSendMessage = async (clientId, text) => {
         const targetClient = clients.find(c => c.id === clientId);
         if (!targetClient) return;
@@ -213,7 +216,7 @@ export default function App() {
         };
 
         try {
-            const savedClient = await api.updateClient(updatedClientData.id, updatedClientData);
+            const savedClient = await clientApi.updateClient(updatedClientData.id, updatedClientData);
             setClients(clients.map(c => c.id === savedClient.id ? savedClient : c));
             setSelectedClient(savedClient);
             setToastMessage(alertMessage);
@@ -233,7 +236,7 @@ export default function App() {
         };
 
         try {
-            const savedClient = await api.updateClient(updatedClientData.id, updatedClientData);
+            const savedClient = await clientApi.updateClient(updatedClientData.id, updatedClientData);
             setClients(clients.map(c => c.id === savedClient.id ? savedClient : c));
             setSelectedClient(savedClient);
             setToastMessage('Scheda eliminata dal server!');
@@ -253,7 +256,7 @@ export default function App() {
 
     const handleAddTemplate = async (templateData) => {
         try {
-            const created = await api.addTemplate(templateData);
+            const created = await templatesApi.addTemplate(templateData);
             setTemplatesList([created, ...templatesList]);
             setToastMessage('Modello base salvato!');
             setTimeout(() => setToastMessage(''), 3000);
@@ -263,7 +266,7 @@ export default function App() {
 
     const handleUpdateTemplate = async (templateData) => {
         try {
-            const updated = await api.updateTemplate(templateData.id, templateData);
+            const updated = await templatesApi.updateTemplate(templateData.id, templateData);
             setTemplatesList(templatesList.map(t => t.id === updated.id ? updated : t));
             setToastMessage('Modello base aggiornato!');
             setTimeout(() => setToastMessage(''), 3000);
@@ -274,7 +277,7 @@ export default function App() {
     const handleDeleteTemplate = async (id) => {
         if(!id) return;
         try {
-            await api.deleteTemplate(id);
+            await templatesApi.deleteTemplate(id);
             setTemplatesList(templatesList.filter(t => t.id !== id));
             setToastMessage('Modello eliminato!');
             setTimeout(() => setToastMessage(''), 3000);
@@ -283,7 +286,7 @@ export default function App() {
 
     const handleAddGym = async (newGym) => {
         try {
-            const created = await api.addGym(newGym);
+            const created = await gymApi.addGym(newGym);
             setGymsList([...gymsList, created]);
             setToastMessage('Palestra sincronizzata!');
             setTimeout(() => setToastMessage(''), 3000);
@@ -292,7 +295,7 @@ export default function App() {
 
     const handleUpdateGym = async (updatedGym) => {
         try {
-            const updated = await api.updateGym(updatedGym.id, updatedGym);
+            const updated = await gymApi.updateGym(updatedGym.id, updatedGym);
             setGymsList(gymsList.map(g => g.id === updatedGym.id ? updated : g));
             setToastMessage('Palestra aggiornata!');
             setTimeout(() => setToastMessage(''), 3000);
@@ -302,7 +305,7 @@ export default function App() {
     const handleDeleteGym = async (id) => {
         if(!id) return;
         try {
-            await api.deleteGym(id);
+            await gymApi.deleteGym(id);
             setGymsList(gymsList.filter(g => g.id !== id));
             const updatedClients = clients.map(c => c.gymId === id ? { ...c, gymId: null } : c);
             setClients(updatedClients);
@@ -313,7 +316,7 @@ export default function App() {
 
     const handleAddExercise = async (newExercise) => {
         try {
-            const created = await api.addExercise(newExercise);
+            const created = await exercisesApi.addExercise(newExercise);
             setExercisesList([...exercisesList, created]);
             setToastMessage('Esercizio sincronizzato!');
             setTimeout(() => setToastMessage(''), 3000);
@@ -322,7 +325,7 @@ export default function App() {
 
     const handleUpdateExercise = async (updatedExercise) => {
         try {
-            const updated = await api.updateExercise(updatedExercise.id, updatedExercise);
+            const updated = await exercisesApi.updateExercise(updatedExercise.id, updatedExercise);
             setExercisesList(exercisesList.map(ex => ex.id === updatedExercise.id ? updated : ex));
             setToastMessage('Esercizio aggiornato!');
             setTimeout(() => setToastMessage(''), 3000);
@@ -332,7 +335,7 @@ export default function App() {
     const handleDeleteExercise = async (id) => {
         if(!id) return;
         try {
-            await api.deleteExercise(id);
+            await exercisesApi.deleteExercise(id);
             setExercisesList(exercisesList.filter(ex => ex.id !== id));
             setToastMessage('Esercizio eliminato!');
             setTimeout(() => setToastMessage(''), 3000);

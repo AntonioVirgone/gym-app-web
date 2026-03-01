@@ -1,4 +1,4 @@
-import {API_BASE_URL, delay, USE_MOCK_API} from "./gymService.js";
+import {API_BASE_URL, delay, USE_MOCK_API} from "./BaseService.js";
 
 export const authApi = {
     // --- AUTH ---
