@@ -3,10 +3,12 @@ import React, {useState} from "react";
 
 import {Edit, Trash2} from 'lucide-react';
 
-export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete }) {
-    const [formData, setFormData] = useState({ name: '', description: '', defaultRest: 60 });
+// 4. Componente Gestione Esercizi
+export default function ExercisesManager({exercises, templates, onAdd, onUpdate, onDelete}) {
+    const [formData, setFormData] = useState({name: '', description: '', defaultRest: 60});
     const [editId, setEditId] = useState(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+    const [blockDeleteMsg, setBlockDeleteMsg] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
 
     const handleSubmit = (e) => {
@@ -25,12 +27,12 @@ export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete
 
         setErrorMsg('');
         if (editId !== null) {
-            onUpdate({ ...formData, id: editId, name: valName });
+            onUpdate({...formData, id: editId, name: valName});
             setEditId(null);
         } else {
-            onAdd({ ...formData, name: valName });
+            onAdd({...formData, name: valName});
         }
-        setFormData({ name: '', description: '', defaultRest: 60 });
+        setFormData({name: '', description: '', defaultRest: 60});
     };
 
     const handleEdit = (exercise) => {
@@ -41,6 +43,20 @@ export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete
         });
         setEditId(exercise.id);
         setErrorMsg('');
+    };
+
+    const handleDeleteClick = (exercise) => {
+        const isUsedInTemplate = templates.some(tpl =>
+            tpl.days?.some(day =>
+                day.exercises?.some(ex => ex.name === exercise.name)
+            )
+        );
+
+        if (isUsedInTemplate) {
+            setBlockDeleteMsg(`L'esercizio "${exercise.name}" non può essere eliminato perché è attualmente utilizzato in uno o più Modelli Scheda. Rimuovilo dai modelli prima di procedere.`);
+        } else {
+            setConfirmDeleteId(exercise.id);
+        }
     };
 
     return (
@@ -61,7 +77,8 @@ export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Recupero Default (s)</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Recupero Default
+                                (s)</label>
                             <input
                                 type="number"
                                 value={formData.defaultRest}
@@ -92,7 +109,11 @@ export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete
                         {editId !== null && (
                             <button
                                 type="button"
-                                onClick={() => { setEditId(null); setFormData({ name: '', description: '', defaultRest: 60 }); setErrorMsg(''); }}
+                                onClick={() => {
+                                    setEditId(null);
+                                    setFormData({name: '', description: '', defaultRest: 60});
+                                    setErrorMsg('');
+                                }}
                                 className="px-4 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition-colors w-full sm:w-auto"
                             >
                                 Annulla
@@ -103,28 +124,31 @@ export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete
 
                 <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
                     {exercises.map((ex) => (
-                        <div key={ex.id || Math.random().toString()} className="flex justify-between items-start p-4 bg-slate-50 border border-slate-100 rounded-lg hover:border-slate-200 transition-colors">
+                        <div key={ex.id || Math.random().toString()}
+                             className="flex justify-between items-start p-4 bg-slate-50 border border-slate-100 rounded-lg hover:border-slate-200 transition-colors">
                             <div className="min-w-0 pr-4">
                                 <h4 className="font-bold text-slate-800 flex items-center gap-2 flex-wrap">
                                     <span className="truncate">{ex.name}</span>
-                                    <span className="text-xs font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
-                    {ex.defaultRest}s rec.
-                  </span>
+                                    <span
+                                        className="text-xs font-normal bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                                        {ex.defaultRest}s rec.
+                                    </span>
                                 </h4>
-                                {ex.description && <p className="text-sm text-slate-500 mt-1 truncate">{ex.description}</p>}
+                                {ex.description &&
+                                    <p className="text-sm text-slate-500 mt-1 truncate">{ex.description}</p>}
                             </div>
                             <div className="flex gap-2 shrink-0">
                                 <button
                                     onClick={() => handleEdit(ex)}
                                     className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                                 >
-                                    <Edit className="w-5 h-5" />
+                                    <Edit className="w-5 h-5"/>
                                 </button>
                                 <button
-                                    onClick={() => setConfirmDeleteId(ex.id)}
+                                    onClick={() => handleDeleteClick(ex)}
                                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                 >
-                                    <Trash2 className="w-5 h-5" />
+                                    <Trash2 className="w-5 h-5"/>
                                 </button>
                             </div>
                         </div>
@@ -151,7 +175,7 @@ export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete
                                     onDelete(confirmDeleteId);
                                     if (editId === confirmDeleteId) {
                                         setEditId(null);
-                                        setFormData({ name: '', description: '', defaultRest: 60 });
+                                        setFormData({name: '', description: '', defaultRest: 60});
                                     }
                                     setConfirmDeleteId(null);
                                 }}
@@ -163,6 +187,27 @@ export default function ExercisesManager ({ exercises, onAdd, onUpdate, onDelete
                     </div>
                 </div>
             )}
+
+            {blockDeleteMsg && (
+                <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+                        <h3 className="text-xl font-bold text-amber-600 mb-2 flex items-center gap-2">
+                            Azione Bloccata
+                        </h3>
+                        <p className="text-slate-600 mb-6">
+                            {blockDeleteMsg}
+                        </p>
+                        <div className="flex justify-end">
+                            <button
+                                onClick={() => setBlockDeleteMsg('')}
+                                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg transition-colors font-medium"
+                            >
+                                Ho capito
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
-};
+}

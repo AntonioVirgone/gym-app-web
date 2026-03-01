@@ -1,6 +1,6 @@
 import {Dumbbell} from 'lucide-react';
 import React, {useState} from "react";
-import {api} from "../../api/gymService.js";
+import {authApi} from "../../api/AuthService.js";
 
 // 1. Componente Login & Registrazione
 export default function LoginScreen({onLogin}) {
@@ -18,10 +18,10 @@ export default function LoginScreen({onLogin}) {
 
         try {
             if (isRegistering) {
-                const data = await api.register(name, email, password);
+                const data = await authApi.register(name, email, password);
                 onLogin(data.user);
             } else {
-                const data = await api.login(email, password);
+                const data = await authApi.login(email, password);
                 onLogin(data.user);
             }
         } catch (err) {

@@ -3,87 +3,22 @@ import {MOCK_EXERCISES, MOCK_TEMPLATES} from "../modules/mockData.js";
 // ============================================================================
 // --- API SERVICE ---
 // ============================================================================
-const USE_MOCK_API = false; // Imposta a true se il backend è spento
-const API_BASE_URL = 'http://localhost:3000/api';
+export const USE_MOCK_API = false; // Imposta a true se il backend è spento
+export const API_BASE_URL = 'http://localhost:3000/api';
 
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-const getTrainerId = () => {
+export const getTrainerId = () => {
     const user = JSON.parse(localStorage.getItem('currentUser'));
     return user?.id || '';
 };
 
-const getHeaders = () => ({
+export const getHeaders = () => ({
     'Content-Type': 'application/json',
     'trainer-id': getTrainerId()
 });
 
 export const api = {
-    // --- AUTH ---
-    login: async (email, password) => {
-        const res = await fetch(`${API_BASE_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        if (!res.ok) throw new Error('Credenziali errate');
-        const data = await res.json();
-        localStorage.setItem('currentUser', JSON.stringify(data.user));
-        return data;
-    },
-
-    register: async (name, email, password) => {
-        if (!USE_MOCK_API) {
-            const res = await fetch(`${API_BASE_URL}/auth/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password })
-            });
-            if (!res.ok) throw new Error('Errore durante la registrazione');
-            return res.json();
-        }
-        await delay(800);
-        return { user: { id: Date.now().toString(), name, email } };
-    },
-
-    // --- ATLETI ---
-    addClient: async (clientData) => {
-        const res = await fetch(`${API_BASE_URL}/clients`, {
-            method: 'POST',
-            body: JSON.stringify(clientData),
-            headers: getHeaders()
-        });
-        if (!res.ok) throw new Error('Errore nella creazione');
-        return res.json();
-    },
-
-    getClients: async () => {
-        const res = await fetch(`${API_BASE_URL}/clients`, { headers: getHeaders() });
-        if (!res.ok) throw new Error('Errore nel fetch');
-        return res.json();
-    },
-
-    updateClient: async (id, clientData) => {
-        if (!USE_MOCK_API) {
-            const res = await fetch(`${API_BASE_URL}/clients/${id}`, {
-                method: 'PUT',
-                body: JSON.stringify(clientData),
-                headers: getHeaders()
-            });
-            return res.json();
-        }
-        await delay(400);
-        return clientData;
-    },
-
-    deleteClient: async (id) => {
-        if (!USE_MOCK_API) {
-            await fetch(`${API_BASE_URL}/clients/${id}`, { method: 'DELETE', headers: getHeaders() });
-            return id;
-        }
-        await delay(300);
-        return id;
-    },
 
     // --- PALESTRE ---
     addGym: async (gymData) => {

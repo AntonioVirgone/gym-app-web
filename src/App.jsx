@@ -9,6 +9,7 @@ import GymsManager from "./modules/gyms/GymsManager.jsx";
 import TemplatesManager from "./modules/templates/TemplatesManager.jsx";
 import NotificationsView from "./modules/notifications/NotificationsView.jsx";
 import LoginScreen from "./modules/auth/LoginScreen.jsx";
+import {clientApi} from "./api/ClientService.js";
 
 // --- MAIN APP COMPONENT ---
 
@@ -27,6 +28,14 @@ export default function App() {
     const [gymsList, setGymsList] = useState([]);
     const [templatesList, setTemplatesList] = useState([]);
 
+    // Controlla se l'utente ha già una sessione salvata nel localStorage al caricamento della pagina
+    useEffect(() => {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+            setIsAuthenticated(true);
+        }
+    }, []);
+
     useEffect(() => {
         if (isAuthenticated) loadInitialData();
     }, [isAuthenticated]);
@@ -35,7 +44,7 @@ export default function App() {
         setIsLoading(true);
         try {
             const [fetchedClients, fetchedGyms, fetchedExercises, fetchedTemplates] = await Promise.all([
-                api.getClients(),
+                clientApi.getClients(),
                 api.getGyms(),
                 api.getExercises(),
                 api.getTemplates()
@@ -53,11 +62,13 @@ export default function App() {
     };
 
     const handleLogin = () => setIsAuthenticated(true);
+
     const handleLogout = () => {
         setIsAuthenticated(false);
         setView('list');
         setSelectedClient(null);
         setClients([]);
+        localStorage.removeItem('currentUser');
     };
 
     const handleSelectClient = async (client) => {
@@ -93,7 +104,7 @@ export default function App() {
 
     const handleAddClient = async (newClientData) => {
         try {
-            const createdClient = await api.addClient(newClientData);
+            const createdClient = await clientApi.addClient(newClientData);
             setClients([createdClient, ...clients]);
             setToastMessage('Atleta (e utenza) creati!');
             setTimeout(() => setToastMessage(''), 4000);
@@ -102,7 +113,7 @@ export default function App() {
 
     const handleUpdateClient = async (updatedClientData) => {
         try {
-            const updatedClient = await api.updateClient(updatedClientData.id, updatedClientData);
+            const updatedClient = await clientApi.updateClient(updatedClientData.id, updatedClientData);
             setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c));
             if (selectedClient?.id === updatedClient.id) setSelectedClient(updatedClient);
             setToastMessage('Profilo aggiornato!');
@@ -112,7 +123,7 @@ export default function App() {
 
     const handleDeleteClient = async (clientId) => {
         try {
-            await api.deleteClient(clientId);
+            await clientApi.deleteClient(clientId);
             setClients(clients.filter(c => c.id !== clientId));
             if (selectedClient?.id === clientId) handleBackToList();
             setToastMessage('Atleta eliminato!');
@@ -148,7 +159,7 @@ export default function App() {
         };
 
         try {
-            const savedClient = await api.updateClient(updatedClientData.id, updatedClientData);
+            const savedClient = await clientApi.updateClient(updatedClientData.id, updatedClientData);
             setClients(clients.map(c => c.id === savedClient.id ? savedClient : c));
             if (selectedClient?.id === savedClient.id) setSelectedClient(savedClient);
         } catch (e) {
@@ -156,7 +167,7 @@ export default function App() {
         }
     };
 
-    const handleCreateWorkoutClick = (clientId) => {
+    const handleCreateWorkoutClick = () => {
         setEditingWorkout(null);
         setStartingTemplate(null);
         setView('create-workout');

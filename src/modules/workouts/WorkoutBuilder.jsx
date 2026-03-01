@@ -1,6 +1,6 @@
 // src/modules/workouts/WorkoutBuilder.jsx
-import React, {useEffect, useState} from 'react';
-import {Save, Plus, Trash2, Bell, MessageSquare, ChevronRight} from 'lucide-react';
+import React, {useState} from 'react';
+import {Plus, Save, Trash2} from 'lucide-react';
 
 // 5. Componente Creazione Scheda (Workout Builder) Adattabile a Clienti/Modelli
 export default function WorkoutBuilder ({ clientName, onCancel, onSave, initialWorkout, availableExercises, isTemplate }) {
@@ -23,6 +23,7 @@ export default function WorkoutBuilder ({ clientName, onCancel, onSave, initialW
     const updateDayName = (dayId, newName) => setDays(days.map(d => d.id === dayId ? { ...d, name: newName } : d));
 
     const addExercise = (dayId) => {
+        if (availableExercises.length === 0) return; // Impedisce l'aggiunta se non ci sono esercizi
         const defaultEx = availableExercises[0] || { name: 'Nuovo Esercizio', defaultRest: 60 };
         setDays(days.map(d => d.id === dayId ? { ...d, exercises: [...d.exercises, { id: generateId(), name: defaultEx.name, sets: 3, reps: 10, rest: defaultEx.defaultRest }] } : d));
     };
@@ -57,7 +58,11 @@ export default function WorkoutBuilder ({ clientName, onCancel, onSave, initialW
                 </h2>
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
                     <button onClick={onCancel} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg flex-1 sm:flex-none text-center transition-colors">Annulla</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center justify-center gap-2 flex-1 sm:flex-none transition-colors">
+                    <button
+                        onClick={handleSave}
+                        disabled={availableExercises.length === 0}
+                        className={`px-4 py-2 rounded-lg flex items-center justify-center gap-2 flex-1 sm:flex-none transition-colors ${availableExercises.length === 0 ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+                    >
                         <Save className="w-4 h-4 shrink-0" /> <span className="whitespace-nowrap">{isTemplate ? 'Salva Modello' : 'Salva e Sincronizza'}</span>
                     </button>
                 </div>
@@ -99,6 +104,12 @@ export default function WorkoutBuilder ({ clientName, onCancel, onSave, initialW
                                                 onChange={(e) => handleExerciseChange(day.id, exercise.id, e.target.value)}
                                                 className="w-full p-2 border border-slate-300 rounded focus:ring-blue-500 outline-none"
                                             >
+                                                {availableExercises.length === 0 && !exercise.name && (
+                                                    <option value="">Nessun esercizio disponibile</option>
+                                                )}
+                                                {!availableExercises.some(ex => ex.name === exercise.name) && exercise.name && (
+                                                    <option value={exercise.name}>{exercise.name} (Non in archivio)</option>
+                                                )}
                                                 {availableExercises.map(ex => <option key={ex.id || ex.name} value={ex.name}>{ex.name}</option>)}
                                             </select>
                                         </div>
@@ -139,16 +150,26 @@ export default function WorkoutBuilder ({ clientName, onCancel, onSave, initialW
                                     </div>
                                 ))}
                             </div>
-                            <button onClick={() => addExercise(day.id)} className="mt-4 w-full py-2 border-2 border-dashed border-slate-300 text-slate-500 rounded-lg hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 font-medium text-sm">
-                                <Plus className="w-4 h-4" /> Aggiungi Esercizio
-                            </button>
+                            {availableExercises.length === 0 ? (
+                                <div className="mt-4 p-3 bg-amber-50 text-amber-700 rounded-lg text-sm border border-amber-200 text-center">
+                                    Nessun esercizio in archivio. Aggiungine uno dalla sezione "Esercizi".
+                                </div>
+                            ) : (
+                                <button onClick={() => addExercise(day.id)} className="mt-4 w-full py-2 border-2 border-dashed border-slate-300 text-slate-500 rounded-lg hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 font-medium text-sm">
+                                    <Plus className="w-4 h-4" /> Aggiungi Esercizio
+                                </button>
+                            )}
                         </div>
                     ))}
                 </div>
-                <button onClick={addDay} className="mt-6 w-full py-3 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 font-bold">
+                <button
+                    onClick={addDay}
+                    disabled={availableExercises.length === 0}
+                    className={`mt-6 w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2 font-bold ${availableExercises.length === 0 ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+                >
                     <Plus className="w-5 h-5" /> Aggiungi Nuovo Giorno
                 </button>
             </div>
         </div>
     );
-};
+}
